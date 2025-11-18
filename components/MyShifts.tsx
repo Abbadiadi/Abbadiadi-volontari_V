@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Volunteer, Shift, Assignment } from '../types';
 
@@ -24,7 +25,6 @@ const COLOR_DETAILS: { [key: string]: { name: string; rgb: string; gradient: str
 };
 
 const getCategoryStyleInfo = (shift: Partial<Shift>) => {
-    // Prioritize the color property from the shift object if it's a valid color key
     if (shift.color && COLOR_DETAILS[shift.color]) {
         const selectedColor = COLOR_DETAILS[shift.color as keyof typeof COLOR_DETAILS];
         return {
@@ -71,15 +71,14 @@ const toTitleCase = (str: string): string => {
 };
 
 const DetailRow: React.FC<{icon: string, text?: string, children?: React.ReactNode, color: string, colorRgb: string}> = ({icon, text, children, color, colorRgb}) => (
-    <div className="flex items-start gap-4">
+    <div className="flex items-start gap-3">
         <div 
-            className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full" 
-            style={{ backgroundColor: `rgba(${colorRgb}, 0.2)` }}
+            className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-surface-2 text-text-color" 
         >
             <span className="material-symbols-rounded text-lg" style={{ color: color }}>{icon}</span>
         </div>
-        <div className="text-text-color-secondary flex-1 pt-1">
-            {text && <p>{text}</p>}
+        <div className="text-text-color flex-1 pt-1 text-sm">
+            {text && <p className="font-medium">{text}</p>}
             {children}
         </div>
     </div>
@@ -126,99 +125,83 @@ const ShiftCard: React.FC<{ shift: Shift; colleagues: Volunteer[]; isUpNext: boo
     const { colorVar, colorRgb, gradient } = getCategoryStyleInfo(shift);
     const formattedTitle = toTitleCase(shift.nome_turno);
 
-    // Dynamic classes for shrinking effect
-    const contentPadding = isExpanded ? 'py-2 px-4' : 'pt-2 pb-3 px-4';
-    const timeSize = isExpanded ? 'text-2xl' : 'text-3xl';
-    const titleSize = isExpanded ? 'text-base' : 'text-lg';
-
     return (
-        <div className={`rounded-4xl shadow-m3-md overflow-hidden transition-all duration-300 ${isPast ? 'opacity-70 filter grayscale' : ''}`}>
-            <div className="relative cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className={`rounded-3xl shadow-m3-sm hover:shadow-m3-md overflow-hidden transition-all duration-300 flex flex-col ${isPast ? 'opacity-60 grayscale' : ''}`}>
+            <div className="relative cursor-pointer group" onClick={() => setIsExpanded(!isExpanded)}>
                 {/* Gradient Background */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`}></div>
                 
                  {/* Progress overlay for ongoing shifts */}
                 {isOngoing && (
-                    <div className="absolute inset-0 bg-white/25 backdrop-blur-[2px] transition-all duration-500" style={{ clipPath: `inset(0 ${100 - progress}% 0 0)` }}></div>
+                    <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px] transition-all duration-500" style={{ clipPath: `inset(0 ${100 - progress}% 0 0)` }}></div>
                 )}
                 
-                {/* Main Content */}
-                <div className={`relative z-10 text-white flex flex-col transition-all duration-300 ${contentPadding}`}>
-                     {/* Header: UP NEXT and expand button */}
-                    <div className="flex justify-end items-center gap-2 -mr-1">
-                        {isUpNext && !isPast && !isExpanded && <div className="text-xs font-bold uppercase tracking-widest bg-black/20 px-3 py-1 rounded-full mr-auto">Prossimo Turno</div>}
-                        <button className={`p-1 rounded-full bg-black/10 hover:bg-black/20 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-                            <span className="material-symbols-rounded">expand_more</span>
+                {/* Main Content - Compact Design */}
+                <div className="relative z-10 p-4 flex flex-col text-white min-h-[110px] justify-center">
+                    
+                    {/* Absolute Top Right Controls - Removes vertical space */}
+                    <div className="absolute top-2 right-2 flex items-center gap-1 z-20">
+                         {isUpNext && !isPast && (
+                            <div className="bg-white/90 text-black text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm">
+                                Prossimo
+                            </div>
+                        )}
+                        <button className={`text-white/80 hover:text-white p-1 rounded-full transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                            <span className="material-symbols-rounded text-2xl">expand_more</span>
                         </button>
                     </div>
 
                     {/* Time and Title */}
-                    <div className="flex-grow transition-all duration-300">
-                        <h2 className={`font-mono font-bold transition-all duration-300 ${timeSize}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                            {shift.ora_inizio} - {shift.ora_fine}
-                        </h2>
-                        <h3 className={`font-bold transition-all duration-300 ${titleSize}`} style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>{formattedTitle}</h3>
+                    <div className="pr-6">
+                         <div className="flex items-baseline gap-1.5">
+                            <h2 className="text-3xl font-mono font-bold leading-none tracking-tight drop-shadow-md">
+                                {shift.ora_inizio}
+                            </h2>
+                            <span className="text-sm font-medium opacity-90 leading-none drop-shadow-sm">- {shift.ora_fine}</span>
+                        </div>
+                         <h3 className="font-bold text-lg leading-tight mt-1 truncate drop-shadow-md">
+                            {formattedTitle}
+                        </h3>
                     </div>
                     
-                    {/* Collapsible section for location and badges */}
-                    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? 'max-h-0 opacity-0' : 'max-h-40 opacity-100 mt-2'}`}>
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <p className="text-sm font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>{shift.categoria}</p>
-                            {isOngoing && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-400 text-green-900 pulse-badge-animation">IN CORSO</span>}
-                            {isPast && 
-                                <span className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-black/20 text-white/80">
-                                    <span className="material-symbols-rounded text-sm">check_circle</span>
-                                    Concluso
-                                </span>
-                            }
+                    {/* Pills Section - High Contrast & Collapsible */}
+                    <div className={`flex flex-wrap gap-2 mt-3 transition-all duration-300 origin-top ${isExpanded ? 'scale-y-0 opacity-0 h-0 overflow-hidden mt-0' : 'scale-y-100 opacity-100 h-auto'}`}>
+                         {/* Date Pill */}
+                         <div className="bg-surface-1 text-text-color rounded-lg px-2.5 py-1 shadow-md flex items-center gap-1.5 flex-shrink-0">
+                             <span className="material-symbols-rounded text-[16px] text-primary">calendar_today</span>
+                             <span className="text-xs font-bold">{shift.data_inizio.slice(0, 5)}</span>
                         </div>
-                        <div className="flex items-center justify-between gap-2">
-                            {/* Location Pill */}
-                            <div className="bg-white/95 backdrop-blur-sm text-gray-800 rounded-full flex items-center shadow-inner p-1 pr-3 gap-2 min-w-0 flex-grow">
-                                <div className="flex-shrink-0 flex items-center justify-center rounded-full w-7 h-7" style={{ backgroundColor: `rgba(${colorRgb}, 0.15)` }}>
-                                    <span className="material-symbols-rounded text-base" style={{ color: colorVar }}>location_on</span>
-                                </div>
-                                <div className="flex-grow min-w-0">
-                                    <p className="font-bold truncate text-sm">{shift.luogo}</p>
-                                </div>
-                            </div>
-                            {/* Date Pill */}
-                            <div className="bg-white/90 backdrop-blur-sm text-gray-800 rounded-full flex-shrink-0">
-                                <p className="font-semibold text-xs px-3 py-1.5">{shift.data_inizio.split('/').slice(0, 2).join('/')}</p>
-                            </div>
+                         {/* Location Pill */}
+                        <div className="bg-surface-1 text-text-color rounded-lg px-2.5 py-1 shadow-md flex items-center gap-1.5 max-w-full">
+                             <span className="material-symbols-rounded text-[16px] text-primary">location_on</span>
+                             <span className="text-xs font-bold truncate">{shift.luogo}</span>
                         </div>
                     </div>
                 </div>
-                 {isOngoing && ( <div className="absolute inset-0 rounded-4xl pointer-events-none pulse-ring-animation"></div> )}
+                 {isOngoing && ( <div className="absolute inset-0 border-2 border-white/40 rounded-3xl animate-pulse pointer-events-none"></div> )}
             </div>
             
              {/* Expanded Details Section */}
             <div 
-                className={`transition-all duration-300 ease-in-out overflow-hidden text-text-color ${isExpanded ? 'max-h-[500px]' : 'max-h-0'}`}
-                style={{ backgroundColor: `rgba(${colorRgb}, 0.15)` }}
+                className={`bg-surface-1 transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? 'max-h-[500px] border-t border-surface-3' : 'max-h-0'}`}
             >
                 <div className="p-4 space-y-3">
-                    <DetailRow icon="label" color={colorVar} colorRgb={colorRgb}>
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-semibold text-text-color">{shift.categoria}</p>
-                            {isOngoing && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-500/20 text-green-700">IN CORSO</span>}
-                            {isPast && 
-                                <span className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-surface-3">
-                                    <span className="material-symbols-rounded text-sm">check_circle</span>
-                                    Concluso
-                                </span>
-                            }
-                        </div>
-                    </DetailRow>
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-surface-2 text-text-color-secondary">{shift.categoria}</span>
+                        {isOngoing && <span className="text-xs font-bold px-2 py-1 rounded-md bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">IN CORSO</span>}
+                        {isPast && <span className="text-xs font-bold px-2 py-1 rounded-md bg-surface-3 text-text-color-secondary">CONCLUSO</span>}
+                    </div>
+                    
+                    <DetailRow icon="event" text={shift.data_inizio} color={colorVar} colorRgb={colorRgb} />
                     <DetailRow icon="location_on" text={`${shift.luogo}`} color={colorVar} colorRgb={colorRgb} />
-                    <DetailRow icon="notes" text={shift.descrizione} color={colorVar} colorRgb={colorRgb} />
-                    <DetailRow icon="calendar_month" text={shift.data_inizio} color={colorVar} colorRgb={colorRgb} />
+                    {shift.descrizione && <DetailRow icon="notes" text={shift.descrizione} color={colorVar} colorRgb={colorRgb} />}
+                    
                     <DetailRow icon="group" color={colorVar} colorRgb={colorRgb}>
                          {colleagues.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                                {colleagues.map(v => <span key={v.id} className="bg-surface-3 px-2 py-1 text-xs rounded-md">{v.nome} {v.cognome.charAt(0)}.</span>)}
+                            <div className="flex flex-wrap gap-1 mt-1">
+                                {colleagues.map(v => <span key={v.id} className="bg-surface-2 text-text-color px-2 py-1 text-xs font-medium rounded-md border border-surface-3">{v.nome} {v.cognome.charAt(0)}.</span>)}
                             </div>
-                        ) : <p className="text-text-color-secondary text-xs">Sei l'unico assegnato.</p>}
+                        ) : <p className="text-text-color-secondary text-xs italic">Nessun altro volontario assegnato.</p>}
                     </DetailRow>
                 </div>
             </div>
@@ -300,10 +283,10 @@ const MyShifts: React.FC<MyShiftsProps> = ({ currentUser, appData, isDashboard =
                     ))
                 ) : (
                     !isDashboard && (
-                        <div className="md:col-span-2 text-center text-text-color-secondary mt-8 p-6 bg-surface-1 rounded-2xl">
-                            <span className="material-symbols-rounded text-5xl">sentiment_satisfied</span>
+                        <div className="md:col-span-2 text-center text-text-color-secondary mt-8 p-6 bg-surface-1 rounded-2xl border border-surface-2">
+                            <span className="material-symbols-rounded text-5xl opacity-50">event_busy</span>
                             <p className="mt-2 font-semibold">Nessun turno assegnato</p>
-                            <p>Goditi il tuo tempo libero!</p>
+                            <p className="text-sm">Goditi il tuo tempo libero!</p>
                         </div>
                     )
                 )}
