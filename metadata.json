@@ -1,0 +1,5 @@
+{
+  "name": "Gestione Volontari Pro",
+  "description": "A progressive web application to manage volunteers and their shifts for events. It features real-time data synchronization, role-based access control, and an AI-powered assistant to help create new shifts from natural language descriptions.",
+  "requestFramePermissions": []
+}
